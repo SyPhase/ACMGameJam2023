@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -80,10 +79,18 @@ public class MissionTimer : MonoBehaviour
     }
 
     // Mission success!
-    public void StopTimer()
+    public bool StopTimer()
     {
-        isTiming = false;
+        if (isTiming && timerText.gameObject.activeSelf)
+        {
+            isTiming = false;
+            timerText.gameObject.SetActive(false);
 
-        timerText.gameObject.SetActive(false);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

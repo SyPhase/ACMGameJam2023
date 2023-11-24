@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class BigBlock : MonoBehaviour
@@ -11,12 +12,16 @@ public class BigBlock : MonoBehaviour
     [SerializeField] AudioClip slamSFX;
     [Range(0f, 1f), SerializeField] float slamVolume = 1f;
 
+    [SerializeField] TMP_Text victoryText;
+
     // private variables used by script
     int pressedSpace = 0;
 
     bool isCollidingWithTarget = false; // Status: are you colliding with the target?
 
     float missionTime = 0f;
+
+    bool countingMissionTime = false;
 
     // Reference variables to components
     Rigidbody rb;
@@ -56,6 +61,7 @@ public class BigBlock : MonoBehaviour
     {
         // Start SmallBlock's mission timer
         missionTimer.SetMissionTimeAndStartCountdown(missionTime);
+        countingMissionTime = false;
     }
 
     // Called each frame to get input
@@ -65,14 +71,16 @@ public class BigBlock : MonoBehaviour
         {
             // will allow the force to be added pressBuffer times (pressBuffer * 0.02s)
             pressedSpace += pressBuffer;
+
+            countingMissionTime = true;
         }
 
-        // TODO : Remove Cheat Code
-        if (Input.GetKeyDown(KeyCode.P))
+        // Uncomment for "Cheat Code" to skip section
+        /*if (Input.GetKeyDown(KeyCode.P))
         {
             missionTime = 30f;
             StartCoroutine(SwitchToSmallBlock(1f));
-        }
+        }*/
     }
 
     // Called every 0.02 seconds or 50 times per second
@@ -82,6 +90,11 @@ public class BigBlock : MonoBehaviour
         if (isCollidingWithTarget)
         {
             return;
+        }
+
+        if (countingMissionTime)
+        {
+            missionTime += Time.fixedDeltaTime;
         }
 
         // Clamp the velocity to the maxVelocity
@@ -133,10 +146,20 @@ public class BigBlock : MonoBehaviour
             return;
         }
 
-        // Debug: print out impulse magnitude
-        print(collision.impulse.magnitude);
+        // For return voyage, win when target hit
+        if (missionTimer.StopTimer())
+        {
+            // TODO: You Win the Game!
+            DisableBlock();
+            victoryText.gameObject.SetActive(true);
 
-        missionTime = collision.impulse.magnitude / 24000f ;
+            return;
+        }
+
+        //Set missionTime, for 13 seconds (fastest) it returns 30 seconds, for 30 it returns 5 seconds
+        missionTime = (missionTime * -(25f / 17f) + 49.11764705882352941176470588f) + 1.5f; // +1.5f as margin of transition
+
+        print("Mission Time: " + missionTime);
 
         StartCoroutine(SwitchToSmallBlock(5f));
     }
@@ -174,5 +197,6 @@ public class BigBlock : MonoBehaviour
         // Stops the movement in FixedUpdate
         isCollidingWithTarget = true;
         pressedSpace = 0;
+        countingMissionTime = false;
     }
 }

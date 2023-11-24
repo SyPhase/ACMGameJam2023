@@ -34,6 +34,12 @@ public class SmallBlock : MonoBehaviour
         missionTimer = FindObjectOfType<MissionTimer>();
     }
 
+    void OnDisable()
+    {
+        // Start BigBlock's mission timer
+        missionTimer.SetMissionTimeAndStartCountdown(16.5f);
+    }
+
     void Update()
     {
         if (isDeactivated)
@@ -52,11 +58,11 @@ public class SmallBlock : MonoBehaviour
             jumping = Input.GetKeyDown(KeyCode.Space);
         }
 
-        // TODO: Remove Cheat Code
-        if (Input.GetKeyDown(KeyCode.P))
+        // Uncomment for "Cheat Code" to skip section
+        /*if (Input.GetKeyDown(KeyCode.P))
         {
             StartCoroutine(SwitchToSmallBlock(1f));
-        }
+        }*/
     }
 
     void FixedUpdate()
@@ -148,14 +154,14 @@ public class SmallBlock : MonoBehaviour
             // Debug: Win!
             //print("Win!");
 
+            missionTimer.StopTimer();
+
             StartCoroutine(SwitchToSmallBlock(5f));
         }
     }
 
     IEnumerator SwitchToSmallBlock(float seconds)
     {
-        missionTimer.StopTimer();
-
         // Wait 5 seconds
         yield return new WaitForSeconds(seconds);
 
