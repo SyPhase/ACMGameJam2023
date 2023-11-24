@@ -6,9 +6,14 @@ public class BigBlock : MonoBehaviour
     [SerializeField] float movementForce = 10f;
     [SerializeField] float maxVelocity = 3f;
 
+    [SerializeField] AudioClip slamSFX;
+    [Range(0f, 1f), SerializeField] float slamVolume = 1f;
+
     // private variables used by script
     float xAxis = 0f;
-    float yAxis = 0f; //yAxis * movementForce * rb.mass
+    float yAxis = 0f;
+
+    bool isCollidingWithTarget = false; // Status: are you colliding with the target?
 
     // Reference variables to components
     Rigidbody rb;
@@ -23,6 +28,12 @@ public class BigBlock : MonoBehaviour
 
     void FixedUpdate()
     {
+        // Once collsion with target has happened, stop moving
+        if (isCollidingWithTarget)
+        {
+            return;
+        }
+
         // Get the Input
         xAxis = Input.GetAxis("Horizontal");
         yAxis = Input.GetAxis("Vertical");
@@ -39,11 +50,16 @@ public class BigBlock : MonoBehaviour
             rb.AddForce(xAxis * movementForce * rb.mass, 0f, 0f);
 
             // Play engine sound
-            audioSource.Play();
+            if (audioSource.isPlaying)
+            {
+                audioSource.UnPause();
+            }
+            else
+            {
+                audioSource.Play();
+            }
         }
-
-        // If no input, slow the player down
-        if (xAxis == 0)
+        else if (xAxis == 0) // If no input, slow the player down
         {
             if (rb.velocity.x > 0)
             {
@@ -54,8 +70,36 @@ public class BigBlock : MonoBehaviour
                 rb.AddForce(rb.mass, 0f, 0f);
             }
 
-            // Stop engine sound
+            // Pause engine sound
             audioSource.Pause();
         }
+
+        // if the x-velocity is close to zero
+        if (0.5f > rb.velocity.x && -0.5f < rb.velocity.x)
+        {
+            // Pause engine sound
+            audioSource.Pause();
+        }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        // if the collision is not with the target, ignore it
+        if (!collision.gameObject.CompareTag("Target"))
+        {
+            return;
+        }
+
+        // Stops the movement in FixedUpdate
+        isCollidingWithTarget = true;
+
+        // Stop engine sound
+        audioSource.Stop();
+
+        // Play slamSFX at slamVolume
+        audioSource.PlayOneShot(slamSFX, slamVolume);
+
+        // Debug: print out impulse magnitude
+        print(collision.impulse.magnitude);
     }
 }
