@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class SmallBlock : MonoBehaviour
@@ -42,14 +40,14 @@ public class SmallBlock : MonoBehaviour
         // Normalize the x and y input
         Vector2 inputMovement = new Vector2(xAxis, yAxis).normalized;
 
-        // Only use x and z for the magnitude check, don't include jumping
-        Vector2 walkingVelocity = new Vector2(rb.velocity.x, rb.velocity.z);
+        // Add force depending on movement input
+        rb.AddForce(inputMovement.x * movementForce * rb.mass, 0f, inputMovement.y * movementForce * rb.mass);
 
-        // Don't allow walking speed to go over maxVelocity
-        if (maxVelocity > walkingVelocity.magnitude)
-        {
-            rb.AddForce(inputMovement.x * movementForce * rb.mass, 0f, inputMovement.y * movementForce * rb.mass);
-        }
+        // Don't allow walking speed (magnitude of x and z) to go over maxVelocity
+        Vector3 clampedVelocity = Vector3.ClampMagnitude(new Vector3(rb.velocity.x, 0f, rb.velocity.z), maxVelocity);
+
+        // Set velocity to clampedVelocity with y velocity in tact
+        rb.velocity = new Vector3(clampedVelocity.x, rb.velocity.y, clampedVelocity.z);
 
         // Jump
         if (touchingGround > 0)
@@ -62,6 +60,38 @@ public class SmallBlock : MonoBehaviour
                 jumping = false;
             }
         }
+
+        // If no x-axis input
+        if (xAxis == 0)
+        {
+            // if x-velocity is close to zero
+            if (rb.velocity.x > -0.5f && rb.velocity.x < 0.5f)
+            {
+                // Set x-velocity to zero
+                rb.velocity = new Vector3(0f, rb.velocity.y, rb.velocity.z);
+            }
+            else
+            {
+                // add force opposite the direction of motion
+                rb.AddForce(Mathf.Sign(rb.velocity.x) * movementForce * -rb.mass, 0f, 0f);
+            }
+        }
+
+        // If no y-axis input
+        if (yAxis == 0)
+        {
+            // if z-velocity is close to zero
+            if (rb.velocity.z > -0.5f && rb.velocity.z < 0.5f)
+            {
+                // Set z-velocity to zero
+                rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y, 0f);
+            }
+            else
+            {
+                // add force opposite the direction of motion
+                rb.AddForce(0f, 0f, Mathf.Sign(rb.velocity.z) * movementForce * -rb.mass);
+            }
+        }
     }
 
     void OnCollisionEnter(Collision collision)
@@ -70,13 +100,6 @@ public class SmallBlock : MonoBehaviour
         {
             // Debug: Win!
             //print("Win!");
-        }
-
-        Vector3 norm = collision.GetContact(0).normal;
-
-        if (norm == transform.forward || norm == transform.right || norm == -transform.forward || norm == -transform.right)
-        {
-            print("Touching wall!");
         }
     }
 
