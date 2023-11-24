@@ -16,11 +16,14 @@ public class BigBlock : MonoBehaviour
 
     bool isCollidingWithTarget = false; // Status: are you colliding with the target?
 
+    float missionTime = 0f;
+
     // Reference variables to components
     Rigidbody rb;
     AudioSource audioSource;
     Camera camera;
     SmallBlock smallBlock;
+    MissionTimer missionTimer;
 
     // Called once when the game starts
     void Start()
@@ -30,6 +33,7 @@ public class BigBlock : MonoBehaviour
         audioSource = GetComponent<AudioSource>();
         camera = GetComponentInChildren<Camera>();
         smallBlock = FindObjectOfType<SmallBlock>(true);
+        missionTimer = FindObjectOfType<MissionTimer>();
     }
 
     void OnEnable()
@@ -42,9 +46,16 @@ public class BigBlock : MonoBehaviour
             // Make movement negative to go the other way
             movementForce = -movementForce;
 
-            // Reset this value
+            // Reset values
             isCollidingWithTarget = false;
+            pressedSpace = 0;
         }
+    }
+
+    void OnDisable()
+    {
+        // Start SmallBlock's mission timer
+        missionTimer.SetMissionTimeAndStartCountdown(missionTime);
     }
 
     // Called each frame to get input
@@ -123,6 +134,8 @@ public class BigBlock : MonoBehaviour
 
         // Debug: print out impulse magnitude
         print(collision.impulse.magnitude);
+
+        missionTime = collision.impulse.magnitude / 50f ;
 
         StartCoroutine(SwitchToSmallBlock(5f));
     }

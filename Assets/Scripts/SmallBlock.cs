@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
+// This GameObject MUST start Disabled in the inspector
 public class SmallBlock : MonoBehaviour
 {
     // Variables to set in the Inspector
@@ -21,6 +22,7 @@ public class SmallBlock : MonoBehaviour
     ButtonTracker buttonTracker;
     Camera camera;
     BigBlock bigBlock;
+    MissionTimer missionTimer;
 
     void Start()
     {
@@ -28,6 +30,7 @@ public class SmallBlock : MonoBehaviour
         buttonTracker = GetComponent<ButtonTracker>();
         camera = FindObjectOfType<Camera>();
         bigBlock = FindObjectOfType<BigBlock>(true);
+        missionTimer = FindObjectOfType<MissionTimer>();
     }
 
     void Update()
@@ -145,6 +148,8 @@ public class SmallBlock : MonoBehaviour
 
     IEnumerator SwitchToSmallBlock(float seconds)
     {
+        missionTimer.StopTimer();
+
         // Wait 5 seconds
         yield return new WaitForSeconds(seconds);
 
