@@ -13,6 +13,7 @@ public class SmallBlock : MonoBehaviour
     float xAxis = 0f;
     float yAxis = 0f;
     bool jumping = false;
+    bool isDeactivated = false;
 
     // tracks the ground in contact
     int touchingGround = 0;
@@ -35,6 +36,11 @@ public class SmallBlock : MonoBehaviour
 
     void Update()
     {
+        if (isDeactivated)
+        {
+            return;
+        }
+
         // Get input
         xAxis = Input.GetAxisRaw("Horizontal");
         yAxis = Input.GetAxisRaw("Vertical");
@@ -165,5 +171,15 @@ public class SmallBlock : MonoBehaviour
         camera.transform.localScale = Vector3.zero;
 
         gameObject.SetActive(false);
+    }
+
+    public void DisableBlock()
+    {
+        // Stops getting input
+        isDeactivated = true;
+
+        xAxis = 0;
+        yAxis = 0;
+        jumping = false;
     }
 }

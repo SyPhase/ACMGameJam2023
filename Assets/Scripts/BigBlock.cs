@@ -70,6 +70,7 @@ public class BigBlock : MonoBehaviour
         // TODO : Remove Cheat Code
         if (Input.GetKeyDown(KeyCode.P))
         {
+            missionTime = 30f;
             StartCoroutine(SwitchToSmallBlock(1f));
         }
     }
@@ -135,7 +136,7 @@ public class BigBlock : MonoBehaviour
         // Debug: print out impulse magnitude
         print(collision.impulse.magnitude);
 
-        missionTime = collision.impulse.magnitude / 50f ;
+        missionTime = collision.impulse.magnitude / 24000f ;
 
         StartCoroutine(SwitchToSmallBlock(5f));
     }
@@ -166,5 +167,12 @@ public class BigBlock : MonoBehaviour
         camera.transform.localScale = Vector3.zero;
 
         gameObject.SetActive(false);
+    }
+
+    public void DisableBlock()
+    {
+        // Stops the movement in FixedUpdate
+        isCollidingWithTarget = true;
+        pressedSpace = 0;
     }
 }

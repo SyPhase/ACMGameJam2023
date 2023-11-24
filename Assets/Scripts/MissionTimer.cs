@@ -1,5 +1,8 @@
+using System;
+using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MissionTimer : MonoBehaviour
 {
@@ -7,12 +10,17 @@ public class MissionTimer : MonoBehaviour
     float missionTime = 0f;
 
     TMP_Text timerText;
+    BigBlock bigBlock;
+    SmallBlock smallBlock;
 
     void Start()
     {
         timerText = GetComponentInChildren<TMP_Text>();
 
         timerText.gameObject.SetActive(false);
+
+        bigBlock = FindObjectOfType<BigBlock>(true);
+        smallBlock = FindObjectOfType<SmallBlock>(true);
     }
 
     void Update()
@@ -27,13 +35,40 @@ public class MissionTimer : MonoBehaviour
         // Mission failed!
         if (missionTime <= 0f)
         {
-            missionTime = 0f;
-            isTiming = false;
-
-            timerText.text = "OUT OF TIME!!!";
+            StartCoroutine(RestartGame(5f));
         }
+        else
+        {
+            string time = missionTime.ToString();
+            int index = -1;
 
-        timerText.text = "00:" + missionTime;
+            if (time.Contains('.'))
+            {
+                index = time.IndexOf('.');
+            }
+            if (index > 0)
+            {
+                time = time.Substring(0, index);
+            }
+
+            timerText.text = "00:" + time;
+        }
+    }
+
+    IEnumerator RestartGame(float seconds)
+    {
+        missionTime = 0f;
+        isTiming = false;
+
+        timerText.text = "OUT OF TIME!!!";
+
+        smallBlock.DisableBlock();
+        bigBlock.DisableBlock();
+
+        // Wait 5 seconds
+        yield return new WaitForSeconds(seconds);
+
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void SetMissionTimeAndStartCountdown(float newMissionTime)
