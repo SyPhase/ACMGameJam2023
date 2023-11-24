@@ -1,31 +1,54 @@
+using System.Collections;
 using UnityEngine;
 
 public class BigBlock : MonoBehaviour
 {
     // Variables to set in the Inspector
-    [SerializeField] float movementForce = 10f;
-    [SerializeField] float maxVelocity = 3f;
+    [SerializeField] float movementForce = 5f;
+    [SerializeField] float maxVelocity = 150f;
+    [Range(0, 10), SerializeField] int pressBuffer = 5;
 
     [SerializeField] AudioClip slamSFX;
     [Range(0f, 1f), SerializeField] float slamVolume = 1f;
 
     // private variables used by script
-    float xAxis = 0f;
-    float yAxis = 0f;
+    int pressedSpace = 0;
 
     bool isCollidingWithTarget = false; // Status: are you colliding with the target?
 
     // Reference variables to components
     Rigidbody rb;
     AudioSource audioSource;
+    Camera camera;
+    SmallBlock smallBlock;
 
+    // Called once when the game starts
     void Start()
     {
         // Get component references the component I want on this GameObject
         rb = GetComponent<Rigidbody>();
         audioSource = GetComponent<AudioSource>();
+        camera = GetComponentInChildren<Camera>();
+        smallBlock = FindObjectOfType<SmallBlock>(true);
     }
 
+    // Called each frame to get input
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Space)) // Input.anyKeyDown
+        {
+            // will allow the force to be added pressBuffer times (pressBuffer * 0.02s)
+            pressedSpace += pressBuffer;
+        }
+
+        // TODO : Remove Cheat Code
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            StartCoroutine(SwitchToSmallBlock(1f));
+        }
+    }
+
+    // Called every 0.02 seconds or 50 times per second
     void FixedUpdate()
     {
         // Once collsion with target has happened, stop moving
@@ -34,20 +57,13 @@ public class BigBlock : MonoBehaviour
             return;
         }
 
-        // Get the Input
-        xAxis = Input.GetAxis("Horizontal");
-        yAxis = Input.GetAxis("Vertical");
-
-        // Use x or y, whichever's absolute value is larger
-        if (Mathf.Abs(xAxis) < Mathf.Abs(yAxis))
-        {
-            xAxis = yAxis;
-        }
-
         // Clamp the velocity to the maxVelocity
-        if ((0 < xAxis && maxVelocity > rb.velocity.x) || (0 > xAxis && -maxVelocity < rb.velocity.x))
+        if (0 < pressedSpace && maxVelocity > rb.velocity.x)
         {
-            rb.AddForce(xAxis * movementForce * rb.mass, 0f, 0f);
+            rb.AddForce(movementForce * rb.mass, 0f, 0f);
+
+            // Remove one
+            pressedSpace--;
 
             // Play engine sound
             if (audioSource.isPlaying)
@@ -59,7 +75,7 @@ public class BigBlock : MonoBehaviour
                 audioSource.Play();
             }
         }
-        else if (xAxis == 0) // If no input, slow the player down
+        else if (pressedSpace == 0) // If no input, slow the player down
         {
             if (rb.velocity.x > 0)
             {
@@ -90,6 +106,14 @@ public class BigBlock : MonoBehaviour
             return;
         }
 
+        // Debug: print out impulse magnitude
+        print(collision.impulse.magnitude);
+
+        StartCoroutine(SwitchToSmallBlock(5f));
+    }
+
+    IEnumerator SwitchToSmallBlock(float seconds)
+    {
         // Stops the movement in FixedUpdate
         isCollidingWithTarget = true;
 
@@ -99,7 +123,20 @@ public class BigBlock : MonoBehaviour
         // Play slamSFX at slamVolume
         audioSource.PlayOneShot(slamSFX, slamVolume);
 
-        // Debug: print out impulse magnitude
-        print(collision.impulse.magnitude);
+        // Wait 5 seconds
+        yield return new WaitForSeconds(seconds);
+
+        // Activate SmallBlock
+        smallBlock.gameObject.SetActive(true);
+
+        // Set the camera's parent to be the CameraPlaceholder on the SmallBlock
+        camera.transform.parent = smallBlock.GetComponentInChildren<CameraPlaceholder>().transform;
+
+        // Reset camera's transform for use on SmallBlock
+        camera.transform.localPosition = Vector3.zero;
+        camera.transform.localEulerAngles = Vector3.zero;
+        camera.transform.localScale = Vector3.zero;
+
+        gameObject.SetActive(false);
     }
 }
