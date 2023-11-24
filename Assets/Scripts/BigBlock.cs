@@ -32,6 +32,21 @@ public class BigBlock : MonoBehaviour
         smallBlock = FindObjectOfType<SmallBlock>(true);
     }
 
+    void OnEnable()
+    {
+        if (isCollidingWithTarget)
+        {
+            // Move Big Block back to avoid collision with target again
+            transform.position = new Vector3(transform.position.x - 1f, transform.position.y, transform.position.z);
+
+            // Make movement negative to go the other way
+            movementForce = -movementForce;
+
+            // Reset this value
+            isCollidingWithTarget = false;
+        }
+    }
+
     // Called each frame to get input
     void Update()
     {

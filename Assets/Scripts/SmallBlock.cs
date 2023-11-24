@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class SmallBlock : MonoBehaviour
@@ -12,26 +13,40 @@ public class SmallBlock : MonoBehaviour
     float yAxis = 0f;
     bool jumping = false;
 
+    // tracks the ground in contact
     int touchingGround = 0;
 
     // Reference variables to components
     Rigidbody rb;
     ButtonTracker buttonTracker;
+    Camera camera;
+    BigBlock bigBlock;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         buttonTracker = GetComponent<ButtonTracker>();
+        camera = FindObjectOfType<Camera>();
+        bigBlock = FindObjectOfType<BigBlock>(true);
     }
 
     void Update()
     {
+        // Get input
         xAxis = Input.GetAxisRaw("Horizontal");
         yAxis = Input.GetAxisRaw("Vertical");
 
+        // If NOT already jumping and y-velocity near zero
         if (!jumping && rb.velocity.y < 0.1f && rb.velocity.y > -0.1f)
         {
+            // Check for jump input
             jumping = Input.GetKeyDown(KeyCode.Space);
+        }
+
+        // TODO: Remove Cheat Code
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            StartCoroutine(SwitchToSmallBlock(1f));
         }
     }
 
@@ -94,15 +109,6 @@ public class SmallBlock : MonoBehaviour
         }
     }
 
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Target") && buttonTracker.AreAllButtonsPressed())
-        {
-            // Debug: Win!
-            //print("Win!");
-        }
-    }
-
     void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("NotGround"))
@@ -110,6 +116,7 @@ public class SmallBlock : MonoBehaviour
             return;
         }
 
+        // Increment when touching Ground
         touchingGround++;
     }
 
@@ -120,6 +127,38 @@ public class SmallBlock : MonoBehaviour
             return;
         }
 
+        // Decrement when stopped touching Ground
         touchingGround--;
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        // If collision is with target and all the buttons are pressed
+        if (collision.gameObject.CompareTag("Target") && buttonTracker.AreAllButtonsPressed())
+        {
+            // Debug: Win!
+            //print("Win!");
+
+            StartCoroutine(SwitchToSmallBlock(5f));
+        }
+    }
+
+    IEnumerator SwitchToSmallBlock(float seconds)
+    {
+        // Wait 5 seconds
+        yield return new WaitForSeconds(seconds);
+
+        // Activate BigBlock
+        bigBlock.gameObject.SetActive(true);
+
+        // Set the camera's parent to be the CameraPlaceholder on the SmallBlock
+        camera.transform.parent = bigBlock.GetComponentInChildren<CameraPlaceholder>().transform;
+
+        // Reset camera's transform for use on SmallBlock
+        camera.transform.localPosition = Vector3.zero;
+        camera.transform.localEulerAngles = Vector3.zero;
+        camera.transform.localScale = Vector3.zero;
+
+        gameObject.SetActive(false);
     }
 }
